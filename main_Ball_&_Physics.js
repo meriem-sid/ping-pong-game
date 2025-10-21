@@ -8,6 +8,15 @@ function vec2(x,y){
     return{x: x ,y: y};
 }
 
+function ballColision(ball){
+    if (ball.pos.x > canvas.width - ball.radius || ball.pos.x < ball.radius) {
+        ball.Velocity.x *= -1;
+    }
+    if (ball.pos.y > canvas.height - ball.radius || ball.pos.y < ball.radius) {
+        ball.Velocity.y *= -1;
+    }
+}
+
 function Ball(pos, Velocity, radius){
     this.pos = pos;
     this.Velocity = Velocity;
@@ -19,6 +28,10 @@ function Ball(pos, Velocity, radius){
     };
 
     this.Draw = function(){
+
+        ctx.fillStyle = "#33ff00";
+        ctx.strokeStyle = "#33ff00";
+        
         ctx.beginPath();
     
         ctx.arc(
@@ -29,6 +42,7 @@ function Ball(pos, Velocity, radius){
             Math.PI* 2
         );
         
+        ctx.fill();
         ctx.stroke();        
     };
 }
@@ -39,6 +53,7 @@ const ball = new Ball(vec2(200,200),vec2(2,2),20);
 
 function gameUpdate() {
     ball.Update();
+    ballColision(ball)
 }
 
 function gameDraw () {    
@@ -54,11 +69,11 @@ function gameLoop () {
         canvas.height
     );
 
-    window.requestAnimationFrame(gameLoop);
-
+    
     gameUpdate();
     gameDraw();
-
+    
+    window.requestAnimationFrame(gameLoop);
 }
 
 
