@@ -64,7 +64,20 @@ function Paddle(pos, Velocity, width, height){
     this.Draw = function(){
         ctx.fillStyle = '#33ff00'
         ctx.fillRect(this.pos.x,this.pos.y,this.width,this.height);
-    }
+    };
+    
+    this.GetCenter = function(){
+        return vec2(
+            this.pos.x + this.GetHalfWidth(),
+            this.pos.y + this.GetHalfHeight()
+        );
+    };
+    this.GetHalfWidth = function(){
+        return this.width/2;
+    };
+    this.GetHalfHeight = function(){
+        return this.height/2;
+    };
 
 }
 
@@ -98,6 +111,14 @@ function Ball(pos, Velocity, radius){
     };
 }
 
+function BallPeddal1Collsion(ball,paddle){
+    let dx = Math.abs(ball.pos.x - paddle.GetCenter().x);
+    let dy = Math.abs(ball.pos.y - paddle.GetCenter().y);
+
+    if(dx<=(ball.radius + paddle.GetHalfWidth())&& dy <=(paddle.GetHalfHeight() + ball.radius)){
+        ball.Velocity.x*=-1;
+    }
+}
 
 const ball = new Ball(vec2(200,200),vec2(2,2),20);
 
@@ -110,7 +131,9 @@ function gameUpdate() {
     paddle2.Update();
     PaddleCollsionWithTheEdges(paddle1);
     PaddleCollsionWithTheEdges(paddle2);
-    ballColision(ball)
+    ballColision(ball);
+    BallPeddal1Collsion(ball,paddle1);
+    BallPeddal1Collsion(ball,paddle2);
 }
 
 function gameDraw () {    
