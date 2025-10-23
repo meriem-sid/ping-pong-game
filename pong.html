@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="pong.css">
     <title>pong game</title>
+
 </head>
 <body>
     <div class="game-container">
@@ -29,7 +30,7 @@
             <!-- Start screen overlay -->
              <div class="start-screen">
              <h1 class="game-title">PONG</h1>
-             <button class="start-button">START GAME</button>
+             <button onclick="hideInstructions()" class="start-button">START GAME</button>
              <div class="instructions">
 <p> The first player reachs 5 points wins the game!</p>
 <div class=" control player1-controls">
@@ -44,5 +45,6 @@
         </div>
    </div>
 </div>
+<script src="pong.js"></script>
 </body>
 </html>
