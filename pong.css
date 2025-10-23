@@ -44,34 +44,34 @@
                      #2a3a8a 40px);
 }
 
-       .paddle{
-                     position: absolute;
-                     width: 15px;
-                     height: 100px;
-                     border-radius: 8px;
-                     top: 200px;
-}        
-       .paddle-left{
-                     left: 30px;
-                     top:200px;
-                     background: linear-gradient(to right, #00c6ff, #0072ff);
-                     box-shadow: 0 0 15px rgba(0, 198, 255, 0.7);
+    .paddle{
+            position: absolute;
+            width: 15px;
+            height: 100px;
+            border-radius: 8px;
+            /* vertical position will be set by JS so paddles align to court bounds */
+}
+    .paddle-left{
+            left: 30px;
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.7);
 }
      .paddle-right{
-                     right: 30px;
-                     top:200px;
-                     background: linear-gradient(to right, #00c6ff, #0072ff);
-                     box-shadow: 0 0 15px rgba(0, 198, 255, 0.7);
+            right: 30px;
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.7);
      }
-     .ball{
-                     position:  absolute;
-                     width: 20px;
-                     height: 20px;
-                     background: radial-gradient(circle at 30% 30%, #ffffff, #a0a0a0);
-                     border-radius: 50%;
-                     box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-                     top: 240px;  
-                     left: 390px;
+    .ball{
+                 position:  absolute;
+                 width: 20px;
+                 height: 20px;
+                 background: radial-gradient(circle at 30% 30%, #ffffff, #a0a0a0);
+                 border-radius: 50%;
+                 box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+                 /* center the ball in the container */
+                 top: 50%;
+                 left: 50%;
+                 transform: translate(-50%, -50%);
 }
       .scoreboard {
                      position: absolute;
