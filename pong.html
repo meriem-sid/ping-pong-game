@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="pong.css">
+    <link rel="icon" type="image/png" href="icon1.png">
     <title>pong game</title>
 
 </head>
@@ -42,6 +43,17 @@
         <P>Use UP and DOWN arrows to move</P>
                 </div>
              </div>
+        </div>
+
+        <!-- Countdown overlay -->
+        <div class="countdown-screen" style="display: none;">
+            <div class="countdown-number">3</div>
+        </div>
+
+        <!-- Game Over screen overlay -->
+        <div class="game-over-screen" style="display: none;">
+            <h1 class="winner-text">Player 1 Wins!</h1>
+            <button onclick="resetGame()" class="play-again-button">PLAY AGAIN</button>
         </div>
    </div>
 </div>

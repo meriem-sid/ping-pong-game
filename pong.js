@@ -1,12 +1,13 @@
 //start the game
 function hideInstructions(){
 document.querySelector(".start-screen").style.display="none";
-gameStarted = true;
-ballStartDelay = ballStartDelayTime; 
+gameOver = false;
 resetPaddles();
+updateScoreboard();
 // Ensure ball is centered when game starts
 computeBoundsAndCenter();
 centerBall();
+startCountdown();
 }
 
 //paddles-movements
@@ -37,13 +38,22 @@ let rightPaddleX = 0;
 
 
 let rallyCount = 0;
-const hitsPerSpeedIncrease = 4; //INCREASE SPEED VERY 4 HITS
+const hitsPerSpeedIncrease = 3; //INCREASE SPEED VERY 4 HITS
 
 //game settings
-const baseSpeed = 2.5;
-const speedIncrement = 0.25; 
-const maxSpeed = 8; 
+const baseSpeed = 3;
+const speedIncrement = 0.5; 
+const maxSpeed = 10; 
 
+//Score system
+let playerLeftScore = 0;
+let playerRightScore = 0;
+const winningScore = 5;
+let gameOver = false;
+
+//Countdown system
+let countdownActive = false;
+let countdownValue = 3;
 
 let gameStarted = false;
 let ballStartDelay = 0;
@@ -100,8 +110,21 @@ function centerBall() {
 		courtHeight = gameRect.height;
 	}
 	
-	ballX = Math.round(courtWidth / 2);
-	ballY = Math.round(courtHeight / 2);
+	// Get the actual center line position for perfect alignment
+	const centerLine = document.querySelector('.center-line');
+	const courtRect = court.getBoundingClientRect();
+	
+	if (centerLine) {
+		const centerLineRect = centerLine.getBoundingClientRect();
+		// Calculate the horizontal center of the center line
+		ballX = Math.round((centerLineRect.left + centerLineRect.right) / 2 - courtRect.left);
+		// Calculate the vertical center of the center line
+		ballY = Math.round((centerLineRect.top + centerLineRect.bottom) / 2 - courtRect.top);
+	} else {
+		// Fallback to court center if center line not found
+		ballX = Math.round(courtWidth / 2);
+		ballY = Math.round(courtHeight / 2);
+	}
 	
 	ball.style.left = Math.round(ballX - (ballSize / 2)) + 'px';
 	ball.style.top = Math.round(ballY - (ballSize / 2)) + 'px';
@@ -165,6 +188,76 @@ function resetBall(isInitial = false) {
 }
 
 
+function updateScoreboard() {
+	document.querySelector('.player1-score').textContent = playerLeftScore;
+	document.querySelector('.player2-score').textContent = playerRightScore;
+}
+
+function checkGameOver() {
+	if (playerLeftScore >= winningScore || playerRightScore >= winningScore) {
+		gameOver = true;
+		gameStarted = false;
+		showGameOver();
+		return true;
+	}
+	return false;
+}
+
+function showGameOver() {
+	const winner = playerLeftScore >= winningScore ? "Player 1" : "Player 2";
+	const gameOverScreen = document.querySelector('.game-over-screen');
+	const winnerText = document.querySelector('.winner-text');
+	
+	winnerText.textContent = `${winner} Wins!`;
+	gameOverScreen.style.display = 'flex';
+}
+
+function startCountdown() {
+	countdownActive = true;
+	countdownValue = 3;
+	gameStarted = false;
+	
+	const countdownScreen = document.querySelector('.countdown-screen');
+	const countdownNumber = document.querySelector('.countdown-number');
+	
+	countdownScreen.style.display = 'flex';
+	countdownNumber.textContent = countdownValue;
+	countdownNumber.style.animation = 'countdownPulse 0.8s ease-in-out';
+	
+	const countdownInterval = setInterval(() => {
+		countdownValue--;
+		
+		if (countdownValue > 0) {
+			countdownNumber.textContent = countdownValue;
+			countdownNumber.style.animation = 'none';
+			// Trigger reflow to restart animation
+			countdownNumber.offsetHeight;
+			countdownNumber.style.animation = 'countdownPulse 0.8s ease-in-out';
+		} else {
+			clearInterval(countdownInterval);
+			countdownScreen.style.display = 'none';
+			countdownActive = false;
+			gameStarted = true;
+			ballStartDelay = ballStartDelayTime;
+		}
+	}, 800);
+}
+
+function resetGame() {
+	playerLeftScore = 0;
+	playerRightScore = 0;
+	gameOver = false;
+	updateScoreboard();
+	
+	const gameOverScreen = document.querySelector('.game-over-screen');
+	gameOverScreen.style.display = 'none';
+	
+	resetPaddles();
+	computeBoundsAndCenter();
+	centerBall();
+	startCountdown();
+}
+
 function resetPaddles() {
 	//reset paddles to center
 	const center = Math.round((courtHeight - paddleHeight) / 2);
@@ -215,15 +308,20 @@ function updateBall() {
 		ballVelocityY = -ballVelocityY;
 	}
 	
-	//right player scored
+	//right player scored (left player missed)
 	if (ballX < 0) {
-		
+		playerRightScore++;
+		updateScoreboard();
+		if (checkGameOver()) return;
 		resetPaddles(); 
 		resetBall(false); 
 		return;
 	}
-	// left player scored
+	// left player scored (right player missed)
 	if (ballX > courtWidth) {
+		playerLeftScore++;
+		updateScoreboard();
+		if (checkGameOver()) return;
 		resetPaddles(); 
 		resetBall(false); 
 		return;
@@ -272,8 +370,10 @@ function updateBall() {
 }
 
 function gameLoop() {
-	playerControl();
-	updateBall();
+	if (!gameOver && !countdownActive) {
+		playerControl();
+		updateBall();
+	}
 	requestAnimationFrame(gameLoop);
 }
 
