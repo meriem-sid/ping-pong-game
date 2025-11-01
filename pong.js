@@ -38,12 +38,12 @@ let rightPaddleX = 0;
 
 
 let rallyCount = 0;
-const hitsPerSpeedIncrease = 3; //INCREASE SPEED VERY 4 HITS
+const hitsPerSpeedIncrease = 1; //INCREASE SPEED VERY 4 HITS
 
 //game settings
-const baseSpeed = 3;
+const baseSpeed = 3.8;
 const speedIncrement = 0.5; 
-const maxSpeed = 10; 
+const maxSpeed = 10.5;
 
 //Score system
 let playerLeftScore = 0;
