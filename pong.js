@@ -8,6 +8,7 @@ updateScoreboard();
 computeBoundsAndCenter();
 centerBall();
 startCountdown();
+countdownsound.play();
 }
 
 //paddles-movements
@@ -51,6 +52,9 @@ let playerRightScore = 0;
 const winningScore = 5;
 let gameOver = false;
 
+const scoresound= new Audio("score.wav");
+scoresound.load();
+
 //Countdown system
 let countdownActive = false;
 let countdownValue = 3;
@@ -61,6 +65,9 @@ const ballStartDelayTime = 180; // 3 seconds at 60fps
 
 let minY = 0;
 let maxY = 0;
+
+const countdownsound=new Audio('countdown.wav');
+countdownsound.load();
 
 function computeBoundsAndCenter() {
 	// Get the actual playable area dimensions
@@ -227,7 +234,7 @@ function startCountdown() {
 	const countdownInterval = setInterval(() => {
 		countdownValue--;
 		
-		if (countdownValue > 0) {
+		if (countdownValue > 0) {		
 			countdownNumber.textContent = countdownValue;
 			countdownNumber.style.animation = 'none';
 			// Trigger reflow to restart animation
@@ -298,18 +305,22 @@ function updateBall() {
 	
 	//top wall collision
 	if (ballY - ballRadius <= 0) {
+		flashScreen();
 		ballY = ballRadius;
 		ballVelocityY = -ballVelocityY;
 	}
 	
 	//bottom wall collision
 	if (ballY + ballRadius >= courtHeight) {
+		flashScreen();
 		ballY = courtHeight - ballRadius;
 		ballVelocityY = -ballVelocityY;
 	}
 	
 	//right player scored (left player missed)
 	if (ballX < 0) {
+		scoresound.currentTime=0;
+		scoresound.play()
 		playerRightScore++;
 		updateScoreboard();
 		if (checkGameOver()) return;
@@ -319,6 +330,8 @@ function updateBall() {
 	}
 	// left player scored (right player missed)
 	if (ballX > courtWidth) {
+		scoresound.currentTime=0;
+		scoresound.play();
 		playerLeftScore++;
 		updateScoreboard();
 		if (checkGameOver()) return;
@@ -334,6 +347,9 @@ function updateBall() {
 		ballY >= paddlePositionL && 
 		ballY <= paddlePositionL + paddleHeight &&
 		ballVelocityX < 0) {
+			paddleLeft.classList.add('glow');
+            setTimeout(() => paddleLeft.classList.remove('glow'), 100);
+
 		ballX = leftPaddleX + paddleWidth + ballRadius;//This moves the ball just outside the paddle so it doesn't remain overlapping and cause multiple collisions
 		
 		//Angle variation based on where ball hits paddle
@@ -351,6 +367,8 @@ function updateBall() {
 		ballY >= paddlePositionR && 
 		ballY <= paddlePositionR + paddleHeight &&
 		ballVelocityX > 0) {
+			paddleRight.classList.add('glow');
+            setTimeout(() => paddleRight.classList.remove('glow'), 100);
 		ballX = rightPaddleX - ballRadius;
 		
 		//Angle variation based on where ball hits paddle
@@ -368,6 +386,13 @@ function updateBall() {
 	ball.style.top = (ballY - ballSize/2) + 'px';
 	ball.style.transform = 'none';
 }
+function flashScreen() {
+  const flash = document.createElement('div');
+  flash.classList.add('flash-effect');
+  document.querySelector('.game-container').appendChild(flash);
+  setTimeout(() => flash.remove(), 150);
+}
+
 
 function gameLoop() {
 	if (!gameOver && !countdownActive) {
