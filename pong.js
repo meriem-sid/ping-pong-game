@@ -8,6 +8,7 @@ updateScoreboard();
 computeBoundsAndCenter();
 centerBall();
 startCountdown();
+// Audio will be initialized automatically on first interaction
 }
 
 //paddles-movements
@@ -51,6 +52,91 @@ let playerRightScore = 0;
 const winningScore = 5;
 let gameOver = false;
 
+// Audio context for procedural sounds
+let audioContext = null;
+
+// Initialize audio context on first user interaction (required by browsers)
+function initAudioContext() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+}
+
+// Initialize audio on first click/interaction
+document.addEventListener('click', initAudioContext, { once: true });
+document.addEventListener('keydown', initAudioContext, { once: true });
+
+// Sound generation functions
+function playTone(frequency, duration, type = 'sine', volume = 0.3) {
+    // Ensure audio context is initialized
+    initAudioContext();
+    if (!audioContext) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = type;
+    oscillator.frequency.value = frequency;
+    
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration);
+}
+
+function playPaddleHit(speed = 1) {
+    // Pitch varies with speed for more dynamic feel
+    const baseFreq = 200 + (speed * 50);
+    const duration = 0.1;
+    
+    // Create a more percussive sound with multiple frequencies
+    playTone(baseFreq, duration, 'square', 0.4);
+    setTimeout(() => playTone(baseFreq * 1.5, duration * 0.5, 'sine', 0.2), 10);
+}
+
+function playWallBounce() {
+    // Softer, lower frequency for wall bounces
+    playTone(150, 0.08, 'sine', 0.25);
+    setTimeout(() => playTone(120, 0.06, 'sine', 0.15), 10);
+}
+
+function playScore() {
+    // Ascending tone for scoring
+    playTone(400, 0.15, 'sine', 0.5);
+    setTimeout(() => playTone(500, 0.15, 'sine', 0.4), 50);
+    setTimeout(() => playTone(600, 0.2, 'sine', 0.3), 100);
+}
+
+function playGameOver() {
+    // Descending tone for game over
+    playTone(300, 0.2, 'sine', 0.5);
+    setTimeout(() => playTone(250, 0.2, 'sine', 0.4), 100);
+    setTimeout(() => playTone(200, 0.3, 'sine', 0.3), 200);
+}
+
+function playCountdownBeep(number) {
+    // Different pitches for countdown numbers
+    const frequencies = [300, 400, 500]; // 3, 2, 1
+    const index = Math.min(number - 1, 2);
+    playTone(frequencies[index], 0.15, 'sine', 0.4);
+}
+
+function playGameStart() {
+    // Upward arpeggio for game start
+    playTone(400, 0.1, 'sine', 0.4);
+    setTimeout(() => playTone(500, 0.1, 'sine', 0.4), 50);
+    setTimeout(() => playTone(600, 0.2, 'sine', 0.5), 100);
+}
+
+
 //Countdown system
 let countdownActive = false;
 let countdownValue = 3;
@@ -61,6 +147,8 @@ const ballStartDelayTime = 180; // 3 seconds at 60fps
 
 let minY = 0;
 let maxY = 0;
+
+
 
 function computeBoundsAndCenter() {
 	// Get the actual playable area dimensions
@@ -210,6 +298,9 @@ function showGameOver() {
 	
 	winnerText.textContent = `${winner} Wins!`;
 	gameOverScreen.style.display = 'flex';
+	
+	// Play game over sound
+	playGameOver();
 }
 
 function startCountdown() {
@@ -224,21 +315,28 @@ function startCountdown() {
 	countdownNumber.textContent = countdownValue;
 	countdownNumber.style.animation = 'countdownPulse 0.8s ease-in-out';
 	
+	// Play first countdown beep
+	playCountdownBeep(countdownValue);
+	
 	const countdownInterval = setInterval(() => {
 		countdownValue--;
 		
-		if (countdownValue > 0) {
+		if (countdownValue > 0) {		
 			countdownNumber.textContent = countdownValue;
 			countdownNumber.style.animation = 'none';
 			// Trigger reflow to restart animation
 			countdownNumber.offsetHeight;
 			countdownNumber.style.animation = 'countdownPulse 0.8s ease-in-out';
+			// Play countdown beep
+			playCountdownBeep(countdownValue);
 		} else {
 			clearInterval(countdownInterval);
 			countdownScreen.style.display = 'none';
 			countdownActive = false;
 			gameStarted = true;
 			ballStartDelay = ballStartDelayTime;
+			// Play game start sound
+			playGameStart();
 		}
 	}, 800);
 }
@@ -298,18 +396,23 @@ function updateBall() {
 	
 	//top wall collision
 	if (ballY - ballRadius <= 0) {
+		flashScreen();
+		playWallBounce();
 		ballY = ballRadius;
 		ballVelocityY = -ballVelocityY;
 	}
 	
 	//bottom wall collision
 	if (ballY + ballRadius >= courtHeight) {
+		flashScreen();
+		playWallBounce();
 		ballY = courtHeight - ballRadius;
 		ballVelocityY = -ballVelocityY;
 	}
 	
 	//right player scored (left player missed)
 	if (ballX < 0) {
+		playScore();
 		playerRightScore++;
 		updateScoreboard();
 		if (checkGameOver()) return;
@@ -319,6 +422,7 @@ function updateBall() {
 	}
 	// left player scored (right player missed)
 	if (ballX > courtWidth) {
+		playScore();
 		playerLeftScore++;
 		updateScoreboard();
 		if (checkGameOver()) return;
@@ -334,6 +438,9 @@ function updateBall() {
 		ballY >= paddlePositionL && 
 		ballY <= paddlePositionL + paddleHeight &&
 		ballVelocityX < 0) {
+			paddleLeft.classList.add('glow');
+            setTimeout(() => paddleLeft.classList.remove('glow'), 100);
+
 		ballX = leftPaddleX + paddleWidth + ballRadius;//This moves the ball just outside the paddle so it doesn't remain overlapping and cause multiple collisions
 		
 		//Angle variation based on where ball hits paddle
@@ -343,6 +450,9 @@ function updateBall() {
 		const speedBonus = Math.floor(rallyCount / hitsPerSpeedIncrease) * speedIncrement;
 		const newSpeed = Math.min(maxSpeed, baseSpeed + speedBonus);
 		ballVelocityX = newSpeed;
+		
+		// Play paddle hit sound with speed variation
+		playPaddleHit(newSpeed / baseSpeed);
 	}
 	
 	//right paddle collision
@@ -351,6 +461,8 @@ function updateBall() {
 		ballY >= paddlePositionR && 
 		ballY <= paddlePositionR + paddleHeight &&
 		ballVelocityX > 0) {
+			paddleRight.classList.add('glow');
+            setTimeout(() => paddleRight.classList.remove('glow'), 100);
 		ballX = rightPaddleX - ballRadius;
 		
 		//Angle variation based on where ball hits paddle
@@ -360,6 +472,9 @@ function updateBall() {
 		const speedBonus = Math.floor(rallyCount / hitsPerSpeedIncrease) * speedIncrement;
 		const newSpeed = Math.min(maxSpeed, baseSpeed + speedBonus);
 		ballVelocityX = -newSpeed;
+		
+		// Play paddle hit sound with speed variation
+		playPaddleHit(newSpeed / baseSpeed);
 	}
 	
 	
@@ -368,6 +483,13 @@ function updateBall() {
 	ball.style.top = (ballY - ballSize/2) + 'px';
 	ball.style.transform = 'none';
 }
+function flashScreen() {
+  const flash = document.createElement('div');
+  flash.classList.add('flash-effect');
+  document.querySelector('.game-container').appendChild(flash);
+  setTimeout(() => flash.remove(), 150);
+}
+
 
 function gameLoop() {
 	if (!gameOver && !countdownActive) {
